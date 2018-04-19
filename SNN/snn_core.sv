@@ -37,7 +37,7 @@ module snn_core(
 	reg [3:0] addr_output_unit;
 	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit, q_output_unit;
 	wire [7:0] k_out;
-	logic we;
+	logic we_hidden we_output;
 	
 	rom_hidden_weight rom_hidden_weight(addr_hidden_weight,clk,q_weight_hidden);
 	rom_output_weight rom_output_weight(addr_output_weight,clk,q_weight_output);
@@ -46,8 +46,8 @@ module snn_core(
 	rom_act_func_lut rom_act_func_lut(acc_rect,clk,k_out);
 	
 	// TODO implmement we
-	ram_hidden_unit ram_hidden_unit(k_out,addr_hidden_unit,we,clk,q_hidden_unit);
-	ram_output_unit ram_output_unit(k_out,addr_output_unit,we,clk,q_output_unit);
+	ram_hidden_unit ram_hidden_unit(k_out,addr_hidden_unit,we_hidden,clk,q_hidden_unit);
+	ram_output_unit ram_output_unit(k_out,addr_output_unit,we_output,clk,q_output_unit);
 
 
 
@@ -63,24 +63,34 @@ module snn_core(
 	assign acc_rect = (of) ? 11'h3ff : ((uf) ? 11'h400 : (acc[17:7] + 11'h400));
 
 	/******************************************************
-	* Increment the bit address for each Rom/Ram each read cycle
+	* Increment the bit address for each rom_output_weight/ram_hidden_unit each read cycle
 	******************************************************/
 	always@(posedge clk, negedge rst_n) begin
-		if(!rst_n) begin
-			addr_input_unit <= 10'h0;
-			addr_hidden_weight <= 15'h0;
-			addr_output_weight <= 9'h0;
-			addr_hidden_unit <= 5'h00;
-			addr_output_unit <= 4'h0;
-		end else begin
-			addr_input_unit <= addr_input_unit + 1;
-			addr_hidden_weight <= addr_hidden_weight + 1;
+		if(!sel) begin
 			addr_output_weight <= addr_output_weight + 1;
 			addr_hidden_unit <= addr_hidden_unit + 1;
+		end
+	end
+	/******************************************************
+	* Increment the bit address for rom_hidden_weight/ram_input_unit when read
+	******************************************************/
+	always@(posedge clk, negedge rst_n) begin
+		if(sel) begin
+			addr_hidden_weight <= addr_hidden_weight + 1;
+			addr_input_unit <= addr_input_unit + 1;
+		end
+	
+	end
+
+	/******************************************************
+	* Increment the bit address for each ram_output_unit each write cycle
+	******************************************************/
+	always@(posedge clk, negedge rst_n) begin
+		if(??) begin
 			addr_output_unit <= addr_output_unit + 1;
 		end
 	end
-
+	
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn_core design
 	******************************************************/
@@ -123,6 +133,5 @@ module snn_core(
 	end
 
 	endmodule
-
 
 
