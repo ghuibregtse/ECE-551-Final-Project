@@ -11,7 +11,7 @@ module snn_core(
 	output reg [9:0] addr_input_unit, // address of each bit
 	output reg [3:0] digit, // output of the digit
 	output done); // asseted when finished
-	
+	logic sel; // select for the muxes into the mac
 	wire q_input_extend;
 	// if q_input = 1 make it 127, else make it 0
 	assign q_input_extend = (q_input) ? {1'b0, {6{q_input}}, q_input} 
@@ -37,7 +37,7 @@ module snn_core(
 	reg [3:0] addr_output_unit;
 	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit, q_output_unit;
 	wire [7:0] k_out;
-	logic we_hidden we_output;
+	logic we_hidden, we_output;
 	
 	rom_hidden_weight rom_hidden_weight(addr_hidden_weight,clk,q_weight_hidden);
 	rom_output_weight rom_output_weight(addr_output_weight,clk,q_weight_output);
