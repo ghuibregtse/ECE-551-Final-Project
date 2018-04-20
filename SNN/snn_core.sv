@@ -10,9 +10,14 @@ module snn_core(
 	input start, q_input, 
 	output reg [9:0] addr_input_unit, // address of each bit
 	output reg [3:0] digit, // output of the digit
-	output done); // asseted when finished
+	output logic done); // asseted when finished
 	logic sel; // select for the muxes into the mac
 	wire q_input_extend;
+	
+	reg [4:0] cnt_hidden;
+	reg [9:0] cnt_input;
+	reg [3:0] cnt_output;
+	
 	// if q_input = 1 make it 127, else make it 0
 	assign q_input_extend = (q_input) ? {1'b0, {6{q_input}}, q_input} 
 									  : {{7{q_input}}, q_input};
@@ -37,7 +42,8 @@ module snn_core(
 	reg [3:0] addr_output_unit;
 	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit, q_output_unit;
 	wire [7:0] k_out;
-	logic we_hidden, we_output;
+	logic we_h, we_o;
+
 	
 	rom_hidden_weight rom_hidden_weight(addr_hidden_weight,clk,q_weight_hidden);
 	rom_output_weight rom_output_weight(addr_output_weight,clk,q_weight_output);
@@ -46,8 +52,8 @@ module snn_core(
 	rom_act_func_lut rom_act_func_lut(acc_rect,clk,k_out);
 	
 	// TODO implmement we
-	ram_hidden_unit ram_hidden_unit(k_out,addr_hidden_unit,we_hidden,clk,q_hidden_unit);
-	ram_output_unit ram_output_unit(k_out,addr_output_unit,we_output,clk,q_output_unit);
+	ram_hidden_unit ram_hidden_unit(k_out,addr_hidden_unit,we_h,clk,q_hidden_unit);
+	ram_output_unit ram_output_unit(k_out,addr_output_unit,we_o,clk,q_output_unit);
 
 
 
@@ -86,37 +92,67 @@ module snn_core(
 	* Increment the bit address for each ram_output_unit each write cycle
 	******************************************************/
 	always@(posedge clk, negedge rst_n) begin
-		if(??) begin
-			addr_output_unit <= addr_output_unit + 1;
-		end
+		if(!rst_n)
+			addr_hidden_unit <= 10'h0;
+		else
+			if( begin
+				addr_output_unit <= addr_output_unit + 1;
+			end
+			else
+				addr_output_unit <= addr_output_unit;
 	end
 	
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn_core design
 	******************************************************/
-	typedef enum {IDLE,MAC} State;
+	typedef enum {IDLE,MAC_HIDDEN,MAC_HIDDEN_BP1,MAC_HIDDEN_BP2,MAC_HIDDEN_WRITE,
+				  MAC_OUTPUT,MAC_OUTPUT_BP1,MAC_OUTPUT_BP2,MAC_OUTPUT_WRITE,DONE} State;
 	State state,nxt_state;
 	
 	always_comb begin
-		sel = 0;
-		clr_n = 1;
+		sel = 1;
+		clr_n = 0;
+		we_h = 0;
+		we_o = 0;
+		done = 0;
 		nxt_state = IDLE;
 		case (state)
 			IDLE : begin
-				if(start) begin
-					sel = 1;
-					clr_n = 0;
-					nxt_state = MAC;
-				end else 
-					clr_n = 0;
-			end
-			MAC : begin
-				if(done)
-					// add logic
-					nxt_state = IDLE;
-				else begin
-					nxt_state = MAC;
+				if (start) begin
+					nxt_state = MAC_HIDDEN;
 				end
+			end
+			MAC_HIDDEN : begin
+				// TODO What causes it to stay in this state?
+				nxt_state = MAC_HIDDEN_BP1;
+			end
+			MAC_HIDDEN_BP1 : begin
+				//TODO INSERT LOGIC HERE
+				nxt_state = MAC_HIDDEN_BP2;
+			end
+			MAC_HIDDEN_BP2 : begin
+				we_h = 1;
+				nxt_state = MAC_HIDDEN_WRITE;
+			end
+			MAC_HIDDEN_WRITE : begin
+			
+			end
+			MAC_OUTPUT : begin
+			
+			end
+			MAC_OUTPUT_BP1 : begin
+			
+			end
+			MAC_OUTPUT_BP2 : begin
+				we_o = 1;
+				nxt_state = MAC_OUTPUT_WRITE;
+			end
+			MAC_OUTPUT_WRITE : begin
+			
+			end
+			DONE : begin
+				nxt_state = IDLE;
+				done = 1;
 			end
 			default : nxt_state = IDLE;
 		endcase
@@ -133,5 +169,4 @@ module snn_core(
 	end
 
 	endmodule
-
 
