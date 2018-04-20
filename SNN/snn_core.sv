@@ -2,7 +2,7 @@
  *
  * File:	snn_core.sv
  * Authors:	Garret Huibregtse, Sean Cohen, Austin Wirtz
- *
+ *		Hello Sean
  */
 
 module snn_core(
