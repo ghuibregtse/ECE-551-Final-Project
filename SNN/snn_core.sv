@@ -69,6 +69,18 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	assign acc_rect = (of) ? 11'h3ff : ((uf) ? 11'h400 : acc[17:7]);
 	assign acc_rect_add = acc_rect + 1024;
 	
+	
+	
+	
+	
+	
+	/*
+		TODO 
+		Counters for addresses? Follow the below logic, 
+		use state machine to set the incrementers/transition logic
+	*/
+	
+	
 	/******************************************************
 	* cnt_input counter
 	******************************************************/
