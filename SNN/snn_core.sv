@@ -13,6 +13,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	logic sel; // select for the muxes into the mac
 	logic inc_hidden,inc_input,inc_output; // increment respective counter if asserted
 	wire q_input_extend; // saturated q 
+	reg [3:0] max; // the max value in the output reg
 	
 	reg [4:0] cnt_hidden; // counter for hidden addresses
 	reg [9:0] cnt_input; // counter for input addresses
@@ -131,6 +132,13 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* Find Maximum in the output reg and assign to digit
 	******************************************************/
 	// TODO
+	// Max is the max in the output reg
+	always@(posedge clk, negedge rst_n) begin
+		if (!rst_n)
+			digit <= 4'h0;
+		else
+			digit <= max;
+	end
 	
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn_core design
@@ -141,6 +149,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	
 	
 	/*
+		TODO
 		Determine where in which states we need to increment which counters and 
 		which counters when they are full do we need to set the nxt_state with.
 	*/
