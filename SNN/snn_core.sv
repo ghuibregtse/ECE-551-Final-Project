@@ -118,7 +118,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
 	******************************************************/
-	
+	// TODO
 	
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn_core design
@@ -127,6 +127,11 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				  MAC_OUTPUT,MAC_OUTPUT_BP1,MAC_OUTPUT_BP2,MAC_OUTPUT_WRITE,DONE} State;
 	State state,nxt_state;
 	
+	
+	/*
+		Determine where in which states we need to increment which counters and 
+		which counters when they are full do we need to set the nxt_state with.
+	*/
 	always_comb begin
 		sel = 1;
 		clr_n = 1;
@@ -145,7 +150,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				end
 			end
 			MAC_HIDDEN : begin
-				if (cnt_hidden_full)
+				if (?? full counter)
 					nxt_state = MAC_HIDDEN_BP1;
 				else
 					nxt_state = MAC_HIDDEN;
@@ -158,7 +163,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				nxt_state = MAC_HIDDEN_WRITE;
 			end
 			MAC_HIDDEN_WRITE : begin
-				if (cnt_input_full) begin
+				if (?? full counter) begin
 					clr_n = 0;
 					sel = 0;
 					nxt_state = MAC_OUTPUT;
@@ -169,7 +174,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			end
 			MAC_OUTPUT : begin
 				sel = 0;
-				if(cnt_hidden_full)
+				if(?? full counter)
 					nxt_state = MAC_OUTPUT_BP1;
 				else
 					nxt_state = MAC_OUTPUT;
@@ -185,7 +190,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			end
 			MAC_OUTPUT_WRITE : begin
 				sel = 0;
-				if (cnt_output_full)
+				if (?? full counter)
 					nxt_state = DONE;
 				else begin
 					clr_n = 0;
@@ -211,6 +216,5 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	end
 
 	endmodule
-
 
 
