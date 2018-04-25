@@ -59,5 +59,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 				led <= led;
 	end
 	//assign led =  (rx_rdy) ? uart_data : (!rst_n) ? 8'h00 : led;
-
+	/******************************************************
+	FSM Control Unit
+	******************************************************/
 endmodule
