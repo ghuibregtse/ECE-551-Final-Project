@@ -51,7 +51,7 @@ assign bit_full = (bit_ind_cnt == 4'hA) ? 1'b1 : 1'b0;
 
 always_ff @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
-		tran_data <= 10'h0;
+		tran_data <= 10'h3FF;
 	else 
 		if (load)
 			tran_data <= {1'b1, tx_data, 1'b0};
@@ -67,7 +67,7 @@ end
 
 always_ff @(posedge clk, negedge rst_n) begin
 	if (!rst_n)
-		tx <= 1'b0;
+		tx <= 1'b1;
 	else
 		tx <= tran_data[0];
 

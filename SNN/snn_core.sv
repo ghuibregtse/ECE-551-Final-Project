@@ -37,24 +37,15 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* Rom/Ram module instantiations and wires
 	******************************************************/
-	// address inputs for each rom/ram module
-	reg [14:0] addr_hidden_weight;
-	reg [8:0] addr_output_weight;
-	reg [4:0] addr_hidden_unit;
-	reg [3:0] addr_output_unit; 
 	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit, q_output_unit; // outputs of ram/rom modules
 	wire [7:0] k_out; // output of act_func_lut
 	logic we_h, we_o; // write enable hidden/output
-
 	
-	rom_hidden_weight rom_hidden_weight(addr_hidden_weight,clk,q_weight_hidden);
-	rom_output_weight rom_output_weight(addr_output_weight,clk,q_weight_output);
+	rom_hidden_weight rom_hidden_weight({cnt_hidden,cnt_input},clk,q_weight_hidden);
+	rom_output_weight rom_output_weight({cnt_output,cnt_hidden},clk,q_weight_output);
 	rom_act_func_lut rom_act_func_lut(acc_rect_add,clk,k_out);
-	ram_hidden_unit ram_hidden_unit(k_out,addr_hidden_unit,we_h,clk,q_hidden_unit);
-	ram_output_unit ram_output_unit(k_out,addr_output_unit,we_o,clk,q_output_unit);
-
-	assign addr_hidden_weight = {cnt_hidden,cnt_output}; // logic for hidden weight address
-	assign addr_output_weight = {cnt_output,cnt_hidden}; // logic for output weight address
+	ram_hidden_unit ram_hidden_unit(k_out,cnt_hidden,we_h,clk,q_hidden_unit);
+	ram_output_unit ram_output_unit(k_out,cnt_output,we_o,clk,q_output_unit);
 
 
 	/******************************************************
@@ -69,18 +60,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	// rectify mac result based on of/uf and the original result and add 1024
 	assign acc_rect = (of) ? 11'h3ff : ((uf) ? 11'h400 : acc[17:7]);
 	assign acc_rect_add = acc_rect + 1024;
-	
-	
-	
-	
-	
-	
-	/*
-		TODO 
-		Counters for addresses? Follow the below logic, 
-		use state machine to set the incrementers/transition logic
-	*/
-	
 	
 	/******************************************************
 	* cnt_input counter
@@ -130,14 +109,15 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
-	******************************************************/
-	// TODO
-	// Max is the max in the output reg
+	******************************************************/	
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			digit <= 4'h0;
 		else
-			digit <= max;
+			if (digit < q_output_unit)
+				digit <= q_output_unit;
+			else
+				digit <= digit;
 	end
 	
 	/******************************************************
@@ -171,10 +151,12 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				end
 			end
 			MAC_HIDDEN : begin
-				if (?? full counter)
+				if (cnt_input_full)
 					nxt_state = MAC_HIDDEN_BP1;
-				else
+				else begin
+					inc_input = 1;
 					nxt_state = MAC_HIDDEN;
+				end
 			end
 			MAC_HIDDEN_BP1 : begin
 				nxt_state = MAC_HIDDEN_BP2;
@@ -184,7 +166,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				nxt_state = MAC_HIDDEN_WRITE;
 			end
 			MAC_HIDDEN_WRITE : begin
-				if (?? full counter) begin
+				if (cnt_hidden_full) begin
 					clr_n = 0;
 					sel = 0;
 					nxt_state = MAC_OUTPUT;
@@ -195,10 +177,12 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			end
 			MAC_OUTPUT : begin
 				sel = 0;
-				if(?? full counter)
+				if (cnt_hidden_full)
 					nxt_state = MAC_OUTPUT_BP1;
-				else
+				else begin
+					inc_hidden = 1;
 					nxt_state = MAC_OUTPUT;
+				end
 			end
 			MAC_OUTPUT_BP1 : begin
 				sel = 0;
@@ -210,10 +194,11 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				nxt_state = MAC_OUTPUT_WRITE;
 			end
 			MAC_OUTPUT_WRITE : begin
-				sel = 0;
-				if (?? full counter)
+				if (cnt_output_full)
 					nxt_state = DONE;
 				else begin
+					inc_output = 1;
+					sel = 0;
 					clr_n = 0;
 					nxt_state = MAC_OUTPUT;
 				end
@@ -237,5 +222,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	end
 
 	endmodule
+
 
 
