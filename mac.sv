@@ -13,8 +13,8 @@ output reg signed [25:0] acc;
 
 wire signed [25:0] mult_extend;
 wire signed [15:0] mult;
-wire signed [15:0] add;
-wire signed[25:0] acc_nxt;
+wire signed [25:0] add;
+wire signed [25:0] acc_nxt;
 
 
 // If rst_n is asserted reset, else accumulate

@@ -28,9 +28,9 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* Mac module instantiation, wires, and logic
 	******************************************************/
 	logic clr_n; // clear the mac if low
-	wire [25:0] acc; // result of mac
-	wire [10:0] acc_rect,acc_rect_add; // rectified mac result
-	wire [7:0] a, b; // inputs to mac
+	wire signed [25:0] acc; // result of mac
+	wire signed [10:0] acc_rect,acc_rect_add; // rectified mac result
+	wire signed [7:0] a, b; // inputs to mac
 	wire of, uf; // detect overflow/underflow when rectifiying mac result
 	
 	mac mac(a,b,clr_n,clk,rst_n,acc);
@@ -42,7 +42,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	wire [7:0] k_out; // output of act_func_lut
 	logic we_h, we_o; // write enable hidden/output
 	
-	rom_hidden_weight rom_hidden_weight({cnt_hidden,cnt_input},clk,q_weight_hidden);
+	rom_hidden_weight rom_hidden_weight({cnt_hidden,addr_input_unit},clk,q_weight_hidden);
 	rom_output_weight rom_output_weight({cnt_output,cnt_hidden},clk,q_weight_output);
 	rom_act_func_lut rom_act_func_lut(acc_rect_add,clk,k_out);
 	ram_hidden_unit ram_hidden_unit(k_out,cnt_hidden,we_h,clk,q_hidden_unit);
@@ -65,29 +65,29 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* Addr Input Unit Flop
 	******************************************************/
-	always_ff @(posedge clk, negedge rst_n) begin
+	/*always_ff @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 		addr_input_unit <= 10'h0;
 	else
 		addr_input_unit <= cnt_input;
 	end
-	
+	*/
 
 	/******************************************************
-	* cnt_input counter
+	* addr_input_unit counter
 	******************************************************/
 	
-	assign cnt_input_full = (cnt_input == 10'h30F) ? 1 : 0;
+	assign cnt_input_full = (addr_input_unit == 10'h30F) ? 1 : 0;
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
-			cnt_input <= 10'h0;
+			addr_input_unit <= 10'h0;
 		else
 			if (clr_input)
-				cnt_input <= 10'h0;
+				addr_input_unit <= 10'h0;
 			else if (inc_input)
-				cnt_input <= cnt_input + 1;
+				addr_input_unit <= addr_input_unit + 1;
 			else
-				cnt_input <= cnt_input;
+				addr_input_unit <= addr_input_unit;
 	end
 	/******************************************************
 	* cnt_hidden counter
