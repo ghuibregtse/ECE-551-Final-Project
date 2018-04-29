@@ -7,18 +7,19 @@
 module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	input clk, rst_n, start, q_input;
 	output reg [9:0] addr_input_unit; // address of each bit
-	output reg [3:0] digit; // output of the digit
+	output reg [3:0] digit; // output of the digit, cooresponds to index of max_val
 	output logic done; // asseted when finished
 	
 	logic sel; // select for the muxes into the mac
 	logic inc_hidden,inc_input,inc_output; // increment respective counter if asserted
-	wire q_input_extend; // saturated q 
-	reg [3:0] max; // the max value in the output reg
-	
+	wire [7:0] q_input_extend; // saturated q 
 	reg [4:0] cnt_hidden; // counter for hidden addresses
 	reg [9:0] cnt_input; // counter for input addresses
 	reg [3:0] cnt_output; // counter for output addresses
-	wire cnt_input_full, cnt_hidden_full, cnt_output_full; // asserted if counter is full
+	reg cnt_input_full, cnt_hidden_full, cnt_output_full; // asserted if counter is full
+	logic clr_input, clr_hidden, clr_output;
+	reg [7:0] max_val; // the value max value in ram output unit
+
 	
 	// if q_input = 1 make it 127, else make it 0
 	assign q_input_extend = (q_input) ? {1'b0, {6{q_input}}, q_input} : {{7{q_input}}, q_input};
@@ -62,14 +63,26 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	assign acc_rect_add = acc_rect + 1024;
 	
 	/******************************************************
+	* Addr Input Unit Flop
+	******************************************************/
+	always_ff @(posedge clk, negedge rst_n) begin
+	if(!rst_n)
+		addr_input_unit <= 10'h0;
+	else
+		addr_input_unit <= cnt_input;
+	end
+	
+
+	/******************************************************
 	* cnt_input counter
 	******************************************************/
-	assign cnt_input_full = (cnt_input == 10'h310) ? 1 : 0;
-	always@(posedge clk, negedge rst_n) begin
+	
+	assign cnt_input_full = (cnt_input == 10'h30F) ? 1 : 0;
+	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			cnt_input <= 10'h0;
 		else
-			if (cnt_input_full)
+			if (clr_input)
 				cnt_input <= 10'h0;
 			else if (inc_input)
 				cnt_input <= cnt_input + 1;
@@ -79,12 +92,12 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* cnt_hidden counter
 	******************************************************/
-	assign cnt_hidden_full = (cnt_hidden == 5'h20) ? 1 : 0;
-	always@(posedge clk, negedge rst_n) begin
+	assign cnt_hidden_full = (cnt_hidden == 10'h1F) ? 1 : 0;
+	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			cnt_hidden <= 5'h0;
 		else
-			if (cnt_hidden_full)
+			if (clr_hidden)
 				cnt_hidden <= 5'h0;
 			else if (inc_hidden)
 				cnt_hidden <= cnt_hidden + 1;
@@ -94,12 +107,12 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* cnt_output counter
 	******************************************************/
-	assign cnt_output_full = (cnt_output == 4'hA) ? 1 : 0;
-	always@(posedge clk, negedge rst_n) begin
+	assign cnt_output_full = (cnt_output == 4'h9) ? 1 : 0;
+	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			cnt_output <= 4'h0;
 		else
-			if (cnt_output_full)
+			if (clr_output)
 				cnt_output <= 4'h0;
 			else if (inc_output)
 				cnt_output <= cnt_output + 1;
@@ -109,15 +122,19 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
-	******************************************************/	
-	always@(posedge clk, negedge rst_n) begin
-		if (!rst_n)
+	******************************************************/
+	always_ff @(posedge clk, negedge rst_n) begin
+		if (!rst_n) begin
+			max_val <= 8'h0;
 			digit <= 4'h0;
-		else
-			if (digit < q_output_unit)
-				digit <= q_output_unit;
-			else
+		end else
+			if (max_val < q_output_unit) begin
+				max_val <= q_output_unit;
+				digit <= cnt_output;
+			end else begin
+				max_val <= max_val;
 				digit <= digit;
+			end
 	end
 	
 	/******************************************************
@@ -143,6 +160,9 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		inc_hidden = 0;
 		inc_output = 0;
 		inc_input = 0;
+		clr_hidden = 0;
+		clr_input = 0;
+		clr_output = 0;
 		case (state)
 			IDLE : begin
 				if (start) begin
@@ -151,9 +171,10 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				end
 			end
 			MAC_HIDDEN : begin
-				if (cnt_input_full)
+				if (cnt_input_full) begin
+					clr_input = 1;
 					nxt_state = MAC_HIDDEN_BP1;
-				else begin
+				end else begin
 					inc_input = 1;
 					nxt_state = MAC_HIDDEN;
 				end
@@ -162,24 +183,26 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				nxt_state = MAC_HIDDEN_BP2;
 			end
 			MAC_HIDDEN_BP2 : begin
-				we_h = 1;
 				nxt_state = MAC_HIDDEN_WRITE;
 			end
 			MAC_HIDDEN_WRITE : begin
+				we_h = 1;
 				if (cnt_hidden_full) begin
+					clr_hidden = 1;
 					clr_n = 0;
-					sel = 0;
 					nxt_state = MAC_OUTPUT;
 				end else begin
+					inc_hidden = 1;
 					clr_n = 0;
 					nxt_state = MAC_HIDDEN;
 				end
 			end
 			MAC_OUTPUT : begin
 				sel = 0;
-				if (cnt_hidden_full)
+				if (cnt_hidden_full) begin
+					clr_hidden = 1;
 					nxt_state = MAC_OUTPUT_BP1;
-				else begin
+				end else begin
 					inc_hidden = 1;
 					nxt_state = MAC_OUTPUT;
 				end
@@ -190,15 +213,16 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			end
 			MAC_OUTPUT_BP2 : begin
 				sel = 0;
-				we_o = 1;
 				nxt_state = MAC_OUTPUT_WRITE;
 			end
 			MAC_OUTPUT_WRITE : begin
-				if (cnt_output_full)
+				we_o = 1;
+				sel = 0;
+				if (cnt_output_full) begin
+					clr_output = 1;
 					nxt_state = DONE;
-				else begin
+				end else begin
 					inc_output = 1;
-					sel = 0;
 					clr_n = 0;
 					nxt_state = MAC_OUTPUT;
 				end

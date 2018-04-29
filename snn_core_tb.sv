@@ -25,22 +25,24 @@ initial begin
 end
 
 initial begin
-	addr = 0;
 	rst_n = 0;
 	start = 0;
-	done = 0;
 	data = 0;
 	we = 0;
-	digit = 0;
 	@(posedge clk);
 	rst_n = 1;
 	@(posedge clk);
 	@(posedge clk);
 	start = 1;
 	@(posedge clk);
-	start = 1;
-	repeat (1000) @(posedge clk);
+	start = 0;
+	repeat (32) repeat (800) @(posedge clk);
 	$stop;
+	
+	//if (done)
+	//	$stop;
+	//else
+	//	@(posedge clk);
 	
 
 end
