@@ -51,8 +51,8 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if(!rst_n)
 			led <= 8'h00;
 		else 
-			if (rx_rdy)
-				led <= uart_data;
+			if (TRANSMIT)
+				led <= {0011,digit};
 			else
 				led <= led;
 	end
@@ -60,7 +60,8 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	/******************************************************
 	Ram Input Unit Instantiation and logic
 	******************************************************/
-	ram_input_unit ram_input_unit(SNN_INPUT[RAM_PROG], addr_input_unit, we, clk, q);
+	ram_input_unit ram_input_unit(SNN_INPUT[RAM_PROG], RAM_ADDR, we, clk, q);
+	reg [9:0] RAM_ADDR;
 	logic we;
 	wire q;
 	
@@ -75,16 +76,16 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	
 	
 	
-	reg [9:0] SNN_INPUT;
+	reg [783:0] SNN_INPUT;
 	reg [6:0] LOAD_PROG;
 	wire LOAD_DONE;
 	logic INC_LOAD;
 	
 		
-	assign LOAD_DONE = (LOAD_PROG == 6'h62) ? 1 : 0;
+	assign LOAD_DONE = (LOAD_PROG == 7'h62) ? 1 : 0;
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n)
-			LOAD_PROG <= 6'h0;
+			LOAD_PROG <= 7'h0;
 		else
 			if (INC_LOAD)
 				LOAD_PROG <= LOAD_PROG + 1;
@@ -167,7 +168,10 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 				end
 			end
 			TRANSMIT : begin
-				nxt_state = LOAD;
+				if(tx_rdy)
+					nxt_state = LOAD;
+				else 
+					nxt_state = TRANSMIT;
 			end
 			default : nxt_state = LOAD;
 		endcase
