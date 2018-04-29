@@ -20,7 +20,7 @@ module ram_hidden_unit(data,addr,we,clk,q);
 	reg [ADDR_WIDTH-1:0] addr_reg;
 
 	initial
-	readmemh("ram_hidden_contents.txt", ram);
+	$readmemh("ram_hidden_contents.txt", ram);
 
 	always @ (posedge clk)
 	begin

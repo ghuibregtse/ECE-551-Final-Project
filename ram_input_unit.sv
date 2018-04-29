@@ -20,7 +20,7 @@ module ram_input_unit(data,addr,we,clk,q);
 	reg [ADDR_WIDTH-1:0] addr_reg;
 
 	initial
-	readmemh("ram_input_contents.txt", ram);
+	$readmemh("ram_input_contents_sample_0.txt", ram);
 
 	always @ (posedge clk)
 	begin
