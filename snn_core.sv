@@ -14,7 +14,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	logic inc_hidden,inc_input,inc_output; // increment respective counter if asserted
 	wire [7:0] q_input_extend; // saturated q 
 	reg [4:0] cnt_hidden; // counter for hidden addresses
-	reg [9:0] cnt_input; // counter for input addresses
 	reg [3:0] cnt_output; // counter for output addresses
 	reg cnt_input_full, cnt_hidden_full, cnt_output_full; // asserted if counter is full
 	logic clr_input, clr_hidden, clr_output;
@@ -93,6 +92,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* cnt_hidden counter
 	******************************************************/
 	assign cnt_hidden_full = (cnt_hidden == 10'h1F) ? 1 : 0;
+	
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			cnt_hidden <= 5'h0;
@@ -108,29 +108,36 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* cnt_output counter
 	******************************************************/
 	assign cnt_output_full = (cnt_output == 4'h9) ? 1 : 0;
+	reg [3:0] dig_reg;
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n)
+		if (!rst_n) begin
 			cnt_output <= 4'h0;
-		else
-			if (clr_output)
+			dig_reg <= 4'h0;
+		end else
+			if (clr_output) begin
 				cnt_output <= 4'h0;
-			else if (inc_output)
+				dig_reg <= 4'h0;
+			end else if (inc_output) begin
 				cnt_output <= cnt_output + 1;
-			else
+				dig_reg <= cnt_output;
+			end else begin
 				cnt_output <= cnt_output;
+				dig_reg <= cnt_output - 1;
+			end
 	end
 	
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
 	******************************************************/
 	always_ff @(posedge clk, negedge rst_n) begin
+	
 		if (!rst_n) begin
 			max_val <= 8'h0;
 			digit <= 4'h0;
 		end else
 			if (max_val < q_output_unit) begin
 				max_val <= q_output_unit;
-				digit <= cnt_output;
+				digit <= dig_reg;
 			end else begin
 				max_val <= max_val;
 				digit <= digit;
