@@ -35,92 +35,90 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	// For UART_RX, use "uart_rx_synch", which is synchronized, not "uart_rx".
 	
 	uart_rx rx(clk,rst_n,uart_rx_synch,rx_rdy,rx_data);
-	uart_tx tx(clk, rst_n, uart_tx, rx_rdy, uart_data,tx_rdy);
+	uart_tx tx(clk, rst_n, uart_tx, done, uart_data,tx_rdy);
 	
 	always_ff@(posedge clk, negedge rst_n) begin
 		if(!rst_n)
 			uart_data <= 8'hFF;
-		else
+		else if (rx_rdy)
 			uart_data <= rx_data;
+		else
+			uart_data <= uart_data;
 
 	end
 	/******************************************************
 	Ram Input Unit Instantiation and logic
 	******************************************************/
-	reg [7:0] SNN_INPUT;
-	reg [9:0] RAM_ADDR;
+	reg [9:0] ram_addr;
 	logic we_R; 
-	reg [9:0] RAM_PROG;
-	ram_input_unit ram_input_unit(SNN_INPUT[RAM_PROG], RAM_ADDR, we_R, clk, q);
-	ram_input_test ram_input_test(data,addr,we,clk,q);
+	reg [9:0] ram_prog;
+	reg [2:0] write_prog;
+	wire write_done, ram_write_done;
+	logic inc_write,inc_ram;
+	ram_input_unit ram_input_unit(uart_data[write_prog], ram_addr, we_R, clk, q);
+
 	/******************************************************
 	SNN_Core logic
 	******************************************************/
 	wire [9:0] addr_input_unit;    // address of each q_input being sent to snn_core
 	logic start;                   // asserted when finished writing SNN_INPUT to RAM
 	snn_core snn_core(clk, rst_n, start, q, addr_input_unit, digit, done);
+
+	typedef enum {IDLE,LOAD,RAM_WRITE,CALCULATE_FP,CALCULATE,TRANSMIT,DONE} State;
+	State state,nxt_state;
 	
-	
-	reg [6:0] LOAD_PROG;
-	wire LOAD_DONE;
-	logic INC_LOAD,INC_RAM;
-	
-		
-	assign LOAD_DONE = (LOAD_PROG == 7'h61) ? 1 : 0;
+	/******************************************************
+	Write 8 times
+	******************************************************/
+	assign write_done = (write_prog == 3'h7) ? 1 : 0;
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n)
-			LOAD_PROG <= 7'h0;
+			write_prog <= 3'h0;
 		else
-			if (INC_LOAD)
-				LOAD_PROG <= LOAD_PROG + 1;
+			if (state == LOAD)
+				write_prog <= 3'h0;
+			else if (inc_write)
+				write_prog <= write_prog + 1;
 			else
-				LOAD_PROG <= LOAD_PROG;
-	end
+				write_prog <= write_prog;
+	end 
 	
-	
-	assign RAM_WRITE_DONE = (RAM_PROG == 10'h30F) ? 1 : 0;
+	/******************************************************
+	Counts address of input ram
+	******************************************************/
+	assign ram_write_done = (ram_prog == 10'h30F) ? 1 : 0;
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n)
-			RAM_PROG <= 10'h0;
+			ram_prog <= 10'h0;
 		else
-			if (INC_RAM)
-				RAM_PROG <= RAM_PROG + 1;
+			if (inc_ram)
+				ram_prog <= ram_prog + 1;
 			else
-				RAM_PROG <= RAM_PROG;
+				ram_prog <= ram_prog;
 	end
-	//Chooses the correct address for RAM depending on the state 
+	
+	/******************************************************
+	Chooses the correct address for RAM depending on the state 
+	******************************************************/
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n) begin
-			RAM_ADDR <= 10'h0;
+			ram_addr <= 10'h0;
 		end
 		else if(state == RAM_WRITE) begin
-			RAM_ADDR <= RAM_PROG;
+			ram_addr <= ram_prog;
 		end
 		else begin
-			RAM_ADDR <= addr_input_unit;
+			ram_addr <= addr_input_unit;
 		end
 	end
-	//Continuously concatenate until the entire input has been taken in
-	always@(posedge clk, negedge rst_n) begin
-		if (!rst_n) begin
-			SNN_INPUT <= 10'h0;
-		end
-		else if (rx_rdy) begin
-			SNN_INPUT <= rx_data;
-		end
-		else begin
-			SNN_INPUT <= SNN_INPUT;
-		end
-	end 
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn design
 	******************************************************/
-	typedef enum {IDLE,LOAD,RAM_WRITE,CALCULATE,TRANSMIT} State;
-	State state,nxt_state;
+	
 	
 	always_comb begin
-		INC_LOAD = 0;
-		INC_RAM = 0;
+		inc_write = 0;
+		inc_ram = 0;
 		we_R = 0;
 		nxt_state = IDLE;
 		start = 0;
@@ -140,35 +138,39 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			end
 			//In this stage until all of RAM_WRITE has been updated to match SNN_INPUT
 			RAM_WRITE : begin
-				if(RAM_WRITE_DONE) begin
+				if(ram_write_done) begin
 					nxt_state = CALCULATE;
 				end
-				else if (LOAD_DONE) begin
-			
+				else if (write_done) begin
+					nxt_state = LOAD;
 				end
 				else begin 
 					we_R = 1;
-					
-					INC_RAM = 1;
+					inc_write = 1;
+					inc_ram = 1;
 					nxt_state = RAM_WRITE;
 				end
 			end
 			//In this stage until digit has been calculated
-			CALCULATE : begin
-				if (done)
+			CALCULATE_FP : begin
+				start = 1;
+				nxt_state = CALCULATE;
+			end
+			CALCULATE  : begin
+				if(done)
 					nxt_state = TRANSMIT;
-				else begin
-					start = 1;
+				else
 					nxt_state = CALCULATE;
-				end
 			end
 			//Converts digit to ASCI for UART_TX and also sets LED to display the calculated digit
 			TRANSMIT : begin
-				StateT = 1;
 				if(tx_rdy)
-					nxt_state = LOAD;
-				else 
+					nxt_state = DONE;
+				else
 					nxt_state = TRANSMIT;
+			end
+			DONE : begin
+				nxt_state = IDLE;
 			end
 			default : nxt_state = IDLE;
 		endcase
@@ -190,8 +192,8 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if(!rst_n)
 			led <= 8'h00;
 		else 
-			if (state == TRANSMIT)
-				led <= {0011,digit};
+			if (state == DONE)
+				led <= {4'h3,digit};
 			else
 				led <= led;
 	end

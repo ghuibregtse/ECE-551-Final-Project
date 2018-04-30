@@ -1,42 +1,57 @@
 module snn_tb();
 
 
-reg clk, sys_rst_n, uart_tx, uart_rx,tx_rdy;
+reg clk, rst_n, uart_tx,tx_rdy;
 reg [7:0] led;
-reg [7:0] data;
-integer i;
-
-snn iDut(clk, sys_rst_n, led, uart_tx, uart_rx);
+reg [7:0] tx_data;
+reg [9:0] addr;
+reg we,data,tx_start,inc_addr,rdy;
+reg q;
+integer i,j;
+ram_input_test test(data,addr,we,clk,q);
+uart_tx iTX(clk, rst_n, tx, tx_start, tx_data, rdy);
+snn iDut(clk, rst_n, led, uart_tx, tx,tx_rdy);
 initial begin
 clk = 0;
 	forever
 	#5 clk = ~clk;
 end
 
+assign ram_write_done = (addr == 10'h30F) ? 1 : 0;
+	always@(posedge clk, negedge rst_n) begin
+		if (!rst_n)
+			addr <= 10'h0;
+		else
+			if (inc_addr)
+				addr <= addr + 1;
+			else
+				addr <= addr + 1;
+	end
+
+
 initial begin
-sys_rst_n = 0;
-data = 8'hA5;
-@(negedge clk);
-sys_rst_n = 1;
-uart_rx = 0;
+rst_n = 0;
+inc_addr = 0;
+we = 0;
+data = 0;
+tx_start = 0;
+tx_data = 8'hFF;
+@(posedge clk);
+rst_n = 1;
+for (j = 0; j < 98; j = j+1) begin
 	for (i = 0; i < 8; i= i+1) begin
-		repeat (2604) @(posedge clk);
-		uart_rx = data[i];
+		tx_data[i] = q;
+		inc_addr = 1;
+		repeat(2604) @(posedge clk);
+		tx_start = 0;
+		
 	end	
-	repeat (2604) @(posedge clk);
-	uart_rx = 1;
-	repeat (2604) @(posedge clk);
-	repeat(10)repeat(2604) @(posedge clk);
-data = 8'h93;
-uart_rx = 0;
-	for (i = 0; i < 8; i= i+1) begin
-		repeat (2604) @(posedge clk);
-		uart_rx = data[i];
-	end	
-	repeat (2604) @(posedge clk);
-	uart_rx = 1;
-	repeat (2604) @(posedge clk);
-	repeat(10)repeat(2604) @(posedge clk);
+	inc_addr = 0;
+	tx_start = 1;
+
+end
+$stop;
+	repeat(32) repeat (800) @(posedge clk);
 $stop;
 end
 
