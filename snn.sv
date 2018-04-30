@@ -55,9 +55,8 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	/******************************************************
 	SNN_Core logic
 	******************************************************/
-	wire [9:0] addr_input_unit; // address of each q_input being sent to snn_core
-	wire done; // asserted when digit is ready
-	logic start;                  // asseted when finished computing digit
+	wire [9:0] addr_input_unit;    // address of each q_input being sent to snn_core
+	logic start;                   // asserted when finished writing SNN_INPUT to RAM
 	snn_core snn_core(clk, rst_n, start, q, addr_input_unit, digit, done);
 	
 	
