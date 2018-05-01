@@ -50,7 +50,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	Ram Input Unit Instantiation and logic
 	******************************************************/
 	reg [9:0] ram_addr;
-	logic we_R; 
+	logic we_R,clr_write_prog; 
 	reg [9:0] ram_prog;
 	reg [2:0] write_prog;
 	wire write_done, ram_write_done;
@@ -75,7 +75,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if (!rst_n)
 			write_prog <= 3'h0;
 		else
-			if (state == LOAD)
+			if (clr_write_prog)
 				write_prog <= 3'h0;
 			else if (inc_write)
 				write_prog <= write_prog + 1;
@@ -104,12 +104,12 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if (!rst_n) begin
 			ram_addr <= 10'h0;
 		end
-		else if(state == RAM_WRITE) begin
+		else begin
 			ram_addr <= ram_prog;
 		end
-		else begin
+		/*else begin
 			ram_addr <= addr_input_unit;
-		end
+		end*/
 	end
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn design
@@ -122,6 +122,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		we_R = 0;
 		nxt_state = IDLE;
 		start = 0;
+		clr_write_prog = 0;
 		case (state)
 			IDLE : begin
 				if (!uart_rx) begin
@@ -142,6 +143,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 					nxt_state = CALCULATE;
 				end
 				else if (write_done) begin
+					clr_write_prog = 1;
 					nxt_state = LOAD;
 				end
 				else begin 

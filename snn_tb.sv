@@ -22,7 +22,9 @@ assign ram_write_done = (addr == 10'h30F) ? 1 : 0;
 		if (!rst_n)
 			addr <= 10'h0;
 		else
-			if (inc_addr)
+			if (ram_write_done) 
+				addr <= 10'h0;
+			else if (inc_addr)
 				addr <= addr + 1;
 			else
 				addr <= addr;
@@ -36,21 +38,24 @@ we = 0;
 data = 0;
 tx_start = 0;
 tx_data = 8'hFF;
-@(posedge clk);
+@(negedge clk);
 rst_n = 1;
 for (j = 0; j < 98; j = j+1) begin
+	tx_start = 0;
 	for (i = 0; i < 8; i= i+1) begin
 		tx_data[i] = q;
 		inc_addr = 1;
-		repeat(2604) @(posedge clk);
-		tx_start = 0;
+		@(posedge clk);
 		
 	end	
 	inc_addr = 0;
 	tx_start = 1;
-
+	repeat(10) repeat (2604) @(posedge clk);
+	repeat(8) @(posedge clk);
 end
-$stop;
+//$stop;
+	repeat(32) repeat (800) @(posedge clk);
+	repeat(32) repeat (800) @(posedge clk);
 	repeat(32) repeat (800) @(posedge clk);
 $stop;
 end
