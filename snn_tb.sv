@@ -25,7 +25,7 @@ assign ram_write_done = (addr == 10'h30F) ? 1 : 0;
 			if (inc_addr)
 				addr <= addr + 1;
 			else
-				addr <= addr + 1;
+				addr <= addr;
 	end
 
 
