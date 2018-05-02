@@ -5,7 +5,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	output reg [7:0] led;	// Drives LEDs of DE0 nano board
 	input uart_rx;
 	output uart_tx, tx_rdy;
-	logic rst_n;				 	// Synchronized active low reset
+	logic rst_n,shift;				 	// Synchronized active low reset
 	logic uart_rx_ff, uart_rx_synch;
 
 	/******************************************************
@@ -44,7 +44,9 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			uart_data <= 8'hFF;
 		else if (rx_rdy)
 			uart_data <= rx_data;
-		else
+		else if (shift)
+			uart_data <= {1'b1,uart_data[7:1]};
+		else 
 			uart_data <= uart_data;
 
 	end
@@ -57,7 +59,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	reg [2:0] write_prog;
 	wire write_done, ram_write_done;
 	logic inc_write,inc_ram;
-	ram_input_unit ram_input_unit(uart_data[write_prog], ram_addr, we, clk, q);
+	ram_input_unit ram_input_unit(uart_data[0], ram_addr, we, clk, q);
 	/******************************************************
 	SNN_Core logic
 	******************************************************/
@@ -113,15 +115,11 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		inc_write = 0;
 		inc_ram = 0;
 		we = 0;
-		nxt_state = IDLE;
+		nxt_state = LOAD;
 		start = 0;
 		clr_write_prog = 0;
+		shift = 0;
 		case (state)
-			IDLE : begin
-				if (!uart_rx) begin
-					nxt_state = LOAD;
-				end	
-			end
 			//In this stage until all 98 bytes are loaded into SNN_INPUT
 			LOAD : begin
 				if (rx_rdy) begin
@@ -144,14 +142,11 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 					nxt_state = LOAD;
 				end
 				else begin 
+					shift = 1;
 					nxt_state = RAM_WRITE;
 				end
 			end
 			//In this stage until digit has been calculated
-			CALCULATE_FP : begin
-				start = 1;
-				nxt_state = CALCULATE;
-			end
 			CALCULATE  : begin
 				if(done)
 					nxt_state = TRANSMIT;
@@ -165,7 +160,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 				else
 					nxt_state = TRANSMIT;
 			end
-			default : nxt_state = IDLE;
+			default : nxt_state = LOAD;
 		endcase
 	end
 
@@ -174,7 +169,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	******************************************************/	
 	always_ff @(posedge clk, negedge rst_n) begin
 		if(!rst_n) 
-			state <= IDLE;
+			state <= LOAD;
 		else 
 			state <= nxt_state;
 	end
