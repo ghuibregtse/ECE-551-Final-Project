@@ -49,15 +49,18 @@ for (j = 0; j < 98; j = j+1) begin
 	end	
 	inc_addr = 0;
 	tx_start = 1;
-	repeat(10) repeat (2604) @(posedge clk);
-	//repeat(8) @(posedge clk);
+	@(posedge clk)
+	tx_start=0;
+	@(posedge rdy)
+	
 end
-//$stop; 
+/*$stop; 
 	while(tx_rdy)
 		@(posedge clk);
 	repeat (8) @(posedge clk);
-	
+*/
 $stop;
 end
 
 endmodule
+
