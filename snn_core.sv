@@ -37,16 +37,14 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* Rom/Ram module instantiations and wires
 	******************************************************/
-	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit, q_output_unit; // outputs of ram/rom modules
+	wire [7:0] q_weight_hidden, q_weight_output, q_hidden_unit; // outputs of ram/rom modules
 	wire [7:0] k_out; // output of act_func_lut
-	logic we_h, we_o; // write enable hidden/output
+	logic we_h; // write enable hidden/output
 	
 	rom_hidden_weight rom_hidden_weight({cnt_hidden,addr_input_unit},clk,q_weight_hidden);
 	rom_output_weight rom_output_weight({cnt_output,cnt_hidden},clk,q_weight_output);
 	rom_act_func_lut rom_act_func_lut(acc_rect_add,clk,k_out);
 	ram_hidden_unit ram_hidden_unit(k_out,cnt_hidden,we_h,clk,q_hidden_unit);
-	ram_output_unit ram_output_unit(k_out,cnt_output,we_o,clk,q_output_unit);
-
 
 	/******************************************************
 	* MAC result caclulation and rectification
@@ -97,24 +95,18 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* cnt_output counter
 	******************************************************/
 	assign cnt_output_full = (cnt_output == 4'h9) ? 1 : 0;
-	reg [3:0] dig_reg;
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n) begin
 			cnt_output <= 4'h0;
-			dig_reg <= 4'h0;
 		end else
 			if (clr_output) begin
 				cnt_output <= 4'h0;
-				dig_reg <= 4'h0;
 			end else if (inc_output) begin
 				cnt_output <= cnt_output + 1;
-				dig_reg <= cnt_output;
 			end else begin
 				cnt_output <= cnt_output;
-				dig_reg <= cnt_output - 1;
 			end
-	end
-	
+	end 
 	typedef enum {IDLE,MAC_HIDDEN,MAC_HIDDEN_BP1,MAC_HIDDEN_BP2,MAC_HIDDEN_WRITE,
 				  MAC_OUTPUT,MAC_OUTPUT_BP1,MAC_OUTPUT_BP2,MAC_OUTPUT_WRITE,DONE} State;
 	State state,nxt_state;
@@ -152,7 +144,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		sel = 1;
 		clr_n = 1;
 		we_h = 0;
-		we_o = 0;
 		done = 0;
 		nxt_state = IDLE;
 		inc_hidden = 0;
@@ -214,7 +205,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 				nxt_state = MAC_OUTPUT_WRITE;
 			end
 			MAC_OUTPUT_WRITE : begin
-				we_o = 1;
 				sel = 0;
 				if (cnt_output_full) begin
 					clr_output = 1;
