@@ -118,10 +118,9 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		clr_write_prog = 0;
 		case (state)
 			IDLE : begin
-				//if (!uart_rx) begin
-				//	nxt_state = LOAD;
-				//end	
-				nxt_state = IDLE;
+				if (!uart_rx) begin
+					nxt_state = LOAD;
+				end	
 			end
 			//In this stage until all 98 bytes are loaded into SNN_INPUT
 			LOAD : begin
@@ -175,7 +174,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	******************************************************/	
 	always_ff @(posedge clk, negedge rst_n) begin
 		if(!rst_n) 
-			state <= CALCULATE_FP;
+			state <= IDLE;
 		else 
 			state <= nxt_state;
 	end

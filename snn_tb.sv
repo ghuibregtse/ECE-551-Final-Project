@@ -40,7 +40,7 @@ tx_start = 0;
 tx_data = 8'hFF;
 @(negedge clk);
 rst_n = 1;
-/*for (j = 0; j < 98; j = j+1) begin
+for (j = 0; j < 98; j = j+1) begin
 	tx_start = 0;
 	for (i = 0; i < 8; i= i+1) begin
 		tx_data[i] = q;
@@ -52,7 +52,7 @@ rst_n = 1;
 	repeat(10) repeat (2604) @(posedge clk);
 	//repeat(8) @(posedge clk);
 end
-//$stop; */
+//$stop; 
 	while(tx_rdy)
 		@(posedge clk);
 	repeat (8) @(posedge clk);
