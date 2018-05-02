@@ -55,7 +55,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	reg [2:0] write_prog;
 	wire write_done, ram_write_done;
 	logic inc_write,inc_ram;
-	ram_input_unit ram_input_unit(uart_data[write_prog], ram_addr, we_R, clk, q);
+	ram_input_unit ram_input_unit(uart_data[write_prog], ram_prog, we_R, clk, q);
 
 	/******************************************************
 	SNN_Core logic
@@ -86,7 +86,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	/******************************************************
 	Counts address of input ram
 	******************************************************/
-	assign ram_write_done = (ram_prog == 10'h30F) ? 1 : 0;
+	assign ram_write_done = (ram_prog == 10'h310) ? 1 : 0;
 	always@(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			ram_prog <= 10'h0;
@@ -104,12 +104,12 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if (!rst_n) begin
 			ram_addr <= 10'h0;
 		end
+		else if(state == CALCULATE) begin
+			ram_addr <= addr_input_unit;
+		end
 		else begin
 			ram_addr <= ram_prog;
 		end
-		/*else begin
-			ram_addr <= addr_input_unit;
-		end*/
 	end
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn design
@@ -139,15 +139,17 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			end
 			//In this stage until all of RAM_WRITE has been updated to match SNN_INPUT
 			RAM_WRITE : begin
+				we_R = 1;
 				if(ram_write_done) begin
+					inc_write = 1;
 					nxt_state = CALCULATE;
 				end
 				else if (write_done) begin
+					inc_ram = 1;
 					clr_write_prog = 1;
 					nxt_state = LOAD;
 				end
 				else begin 
-					we_R = 1;
 					inc_write = 1;
 					inc_ram = 1;
 					nxt_state = RAM_WRITE;

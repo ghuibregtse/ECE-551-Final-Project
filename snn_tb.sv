@@ -53,10 +53,8 @@ for (j = 0; j < 98; j = j+1) begin
 	repeat(10) repeat (2604) @(posedge clk);
 	repeat(8) @(posedge clk);
 end
-//$stop;
-	repeat(32) repeat (800) @(posedge clk);
-	repeat(32) repeat (800) @(posedge clk);
-	repeat(32) repeat (800) @(posedge clk);
+	repeat (20) repeat(32) repeat (800) @(posedge clk);
+	
 $stop;
 end
 
