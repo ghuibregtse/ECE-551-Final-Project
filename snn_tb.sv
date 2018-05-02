@@ -31,16 +31,16 @@ tx_data = 8'hFF;
 rst_n = 1;
 for (j = 0; j < 98; j = j+1) begin
 	for (i = 0; i < 8; i= i+1) begin
-		@(posedge clk);
-		tx_data[i] <= q;
+		@(posedge clk);	
+		tx_data[i-1] <= q;
 		addr <= addr + 1;
-		
+
 	end	
 	tx_start = 1;
 	@(posedge clk)
 	tx_start = 0;
 	@(posedge rdy);
-	//repeat(8) @(posedge clk);
+	repeat(8) @(posedge clk);
 end
 @(negedge uart_tx);
 @(posedge tx_rdy);
