@@ -79,7 +79,7 @@ end
 
 always_comb begin
 
-	tx_rdy = 0;
+	tx_rdy = 1;
 	clr = 0;
 	shift = 0;
 	load = 0;
@@ -92,10 +92,10 @@ always_comb begin
 				nxt_state = TX;
 			end else begin
 				clr = 1;
-				tx_rdy = 1;
 			end
 		end
 		TX : begin
+			tx_rdy = 0;
 			if(bit_full)
 				nxt_state = IDLE;
 			else begin
