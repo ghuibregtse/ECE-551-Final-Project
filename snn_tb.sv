@@ -17,18 +17,6 @@ clk = 0;
 	#5 clk = ~clk;
 end
 
-assign ram_write_done = (addr == 10'h30F) ? 1 : 0;
-	always@(posedge clk, negedge rst_n) begin
-		if (!rst_n)
-			addr <= 10'h0;
-		else
-			if (ram_write_done) 
-				addr <= 10'h0;
-			else if (inc_addr)
-				addr <= addr + 1;
-			else
-				addr <= addr;
-	end
 
 
 initial begin
@@ -37,30 +25,23 @@ inc_addr = 0;
 we = 0;
 data = 0;
 tx_start = 0;
+addr = 0;
 tx_data = 8'hFF;
 @(negedge clk);
 rst_n = 1;
 for (j = 0; j < 98; j = j+1) begin
-	tx_start = 0;
 	for (i = 0; i < 8; i= i+1) begin
 		tx_data[i] = q;
-		inc_addr = 1;
+		addr = addr + 1;
 		@(posedge clk);
 	end	
-	inc_addr = 0;
 	tx_start = 1;
 	@(posedge clk)
-	tx_start=0;
-	@(posedge rdy)
-	
+	tx_start = 0;
+	@(posedge rdy);
+	//repeat(8) @(posedge clk);
 end
-/*$stop; 
-	while(tx_rdy)
-		@(posedge clk);
-	repeat (8) @(posedge clk);
-*/
-$stop;
+$stop; 
 end
 
 endmodule
-

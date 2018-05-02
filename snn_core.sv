@@ -53,7 +53,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	assign a = (sel) ? q_input_extend : q_hidden_unit;
 	assign b = (sel) ? q_weight_hidden : q_weight_output;
 
-	assign of = ((acc[25] == 0) && ^acc[24:17]); // overflow occurs
+	assign of = ((acc[25] == 0) && |acc[24:17]); // overflow occurs
 	assign uf = ((acc[25] == 1) && ~&acc[24:17]); // underflow occurs
 	// rectify mac result based on of/uf and the original result and add 1024
 	assign acc_rect = (of) ? 11'h3ff : ((uf) ? 11'h400 : acc[17:7]);

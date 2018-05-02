@@ -5,7 +5,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	output reg [7:0] led;	// Drives LEDs of DE0 nano board
 	input uart_rx;
 	output uart_tx, tx_rdy;
-	logic rst_n,shift;				 	// Synchronized active low reset
+	logic rst_n;				 	// Synchronized active low reset
 	logic uart_rx_ff, uart_rx_synch;
 
 	/******************************************************
@@ -44,12 +44,10 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			uart_data <= 8'hFF;
 		else if (rx_rdy)
 			uart_data <= rx_data;
-		else if (shift)
+		else
 			uart_data <= {1'b1,uart_data[7:1]};
-		else 
-			uart_data <= uart_data;
-
 	end
+	
 	/******************************************************
 	Ram Input Unit Instantiation and logic
 	******************************************************/
@@ -60,6 +58,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	wire write_done, ram_write_done;
 	logic inc_write,inc_ram;
 	ram_input_unit ram_input_unit(uart_data[0], ram_addr, we, clk, q);
+	
 	/******************************************************
 	SNN_Core logic
 	******************************************************/
@@ -118,9 +117,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		nxt_state = LOAD;
 		start = 0;
 		clr_write_prog = 0;
-		shift = 0;
 		case (state)
-			//In this stage until all 98 bytes are loaded into SNN_INPUT
 			LOAD : begin
 				if (rx_rdy) begin
 					nxt_state = RAM_WRITE;
@@ -128,7 +125,6 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 					nxt_state = LOAD;			
 				end
 			end
-			//In this stage until all of RAM_WRITE has been updated to match SNN_INPUT
 			RAM_WRITE : begin
 				we = 1;
 				inc_ram = 1;
@@ -142,7 +138,6 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 					nxt_state = LOAD;
 				end
 				else begin 
-					shift = 1;
 					nxt_state = RAM_WRITE;
 				end
 			end
