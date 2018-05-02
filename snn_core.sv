@@ -62,17 +62,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	assign acc_rect_add = acc_rect + 1024;
 	
 	/******************************************************
-	* Addr Input Unit Flop
-	******************************************************/
-	/*always_ff @(posedge clk, negedge rst_n) begin
-	if(!rst_n)
-		addr_input_unit <= 10'h0;
-	else
-		addr_input_unit <= cnt_input;
-	end
-	*/
-
-	/******************************************************
 	* addr_input_unit counter
 	******************************************************/
 	
@@ -126,6 +115,11 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			end
 	end
 	
+	typedef enum {IDLE,MAC_HIDDEN,MAC_HIDDEN_BP1,MAC_HIDDEN_BP2,MAC_HIDDEN_WRITE,
+				  MAC_OUTPUT,MAC_OUTPUT_BP1,MAC_OUTPUT_BP2,MAC_OUTPUT_WRITE,DONE} State;
+	State state,nxt_state;
+	
+	
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
 	******************************************************/
@@ -134,11 +128,12 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		if (!rst_n) begin
 			max_val <= 8'h0;
 			digit <= 4'h0;
-		end else
-			if (max_val < q_output_unit) begin
-				max_val <= q_output_unit;
-				digit <= dig_reg;
-			end else begin
+		end else if(state == MAC_OUTPUT_WRITE) begin
+			if (max_val < k_out) begin
+				max_val <= k_out;
+				digit <= cnt_output;
+			end
+		end else begin
 				max_val <= max_val;
 				digit <= digit;
 			end
@@ -147,10 +142,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* State Machine Transition/Combinational Logic for the snn_core design
 	******************************************************/
-	typedef enum {IDLE,MAC_HIDDEN,MAC_HIDDEN_BP1,MAC_HIDDEN_BP2,MAC_HIDDEN_WRITE,
-				  MAC_OUTPUT,MAC_OUTPUT_BP1,MAC_OUTPUT_BP2,MAC_OUTPUT_WRITE,DONE} State;
-	State state,nxt_state;
-	
 	
 	/*
 		TODO

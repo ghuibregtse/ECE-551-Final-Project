@@ -30,8 +30,7 @@ initial begin
 	start = 1;
 	@(posedge clk);
 	start = 0;
-	//srepeat (32) 
-	repeat (800) @(posedge clk);
+	repeat (32) repeat (800) @(posedge clk);
 	$stop;
 	
 	//if (done)
