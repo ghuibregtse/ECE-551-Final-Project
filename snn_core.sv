@@ -139,13 +139,8 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	* State Machine Transition/Combinational Logic for the snn_core design
 	******************************************************/
 	
-	/*
-		TODO
-		Determine where in which states we need to increment which counters and 
-		which counters when they are full do we need to set the nxt_state with.
-	*/
 	always_comb begin
-		sel = 1;
+		sel = 1;  // Initialize wires and state
 		clr_n = 1;
 		we_h = 0;
 		done = 0;
@@ -158,13 +153,13 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		clr_output = 0;
 		clr_max_val = 0;
 		case (state)
-			IDLE : begin
+			IDLE : begin // Idle state logic
 				if (start) begin
 					nxt_state = MAC_HIDDEN;
 					clr_n = 0;
 				end
 			end
-			MAC_HIDDEN : begin
+			MAC_HIDDEN : begin // Calculate Hidden Layer Nodes 
 				if (cnt_input_full) begin
 					clr_input = 1;
 					nxt_state = MAC_HIDDEN_BP1;
@@ -173,13 +168,13 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 					nxt_state = MAC_HIDDEN;
 				end
 			end
-			MAC_HIDDEN_BP1 : begin
+			MAC_HIDDEN_BP1 : begin // Hidden Layer Back Porch (delay for 1 cycle) 
 				nxt_state = MAC_HIDDEN_BP2;
 			end
-			MAC_HIDDEN_BP2 : begin
+			MAC_HIDDEN_BP2 : begin // Second Hidden Layer Back Porch (delay for 1 cycle)
 				nxt_state = MAC_HIDDEN_WRITE;
 			end
-			MAC_HIDDEN_WRITE : begin
+			MAC_HIDDEN_WRITE : begin // State to write to the hiddent layer nodes
 				we_h = 1;
 				if (cnt_hidden_full) begin
 					clr_hidden = 1;
@@ -191,7 +186,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 					nxt_state = MAC_HIDDEN;
 				end
 			end
-			MAC_OUTPUT : begin
+			MAC_OUTPUT : begin //Calculate Output nodes
 				sel = 0;
 				if (cnt_hidden_full) begin
 					clr_hidden = 1;
@@ -201,15 +196,15 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 					nxt_state = MAC_OUTPUT;
 				end
 			end
-			MAC_OUTPUT_BP1 : begin
+			MAC_OUTPUT_BP1 : begin // Output Layer Back Porch (delay for 1 cycle) 
 				sel = 0;
 				nxt_state = MAC_OUTPUT_BP2;
 			end
-			MAC_OUTPUT_BP2 : begin
+			MAC_OUTPUT_BP2 : begin // Second Output Layer Back Porch (delay for 1 cycle) 
 				sel = 0;
 				nxt_state = MAC_OUTPUT_WRITE;
 			end
-			MAC_OUTPUT_WRITE : begin
+			MAC_OUTPUT_WRITE : begin //State to write to output layer
 				sel = 0;
 				if (cnt_output_full) begin
 					clr_output = 1;
@@ -220,7 +215,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 					nxt_state = MAC_OUTPUT;
 				end
 			end
-			DONE : begin
+			DONE : begin // Done state, clear counters and wires
 				nxt_state = IDLE;
 				done = 1;
 				clr_max_val = 1;
@@ -235,7 +230,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* State Machine Sequential Logic for the snn_core design
 	******************************************************/	
-	always_ff @(posedge clk, negedge rst_n) begin
+	always_ff @(posedge clk, negedge rst_n) begin //reset state logic
 		if(!rst_n) 
 			state <= IDLE;
 		else 
