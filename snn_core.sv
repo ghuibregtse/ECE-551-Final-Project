@@ -115,9 +115,13 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 	/******************************************************
 	* Find Maximum in the output reg and assign to digit
 	******************************************************/
+	logic clr_max_val;
 	always_ff @(posedge clk, negedge rst_n) begin
 	
 		if (!rst_n) begin
+			max_val <= 8'h0;
+			digit <= 4'h0;
+		end else if (clr_max_val) begin
 			max_val <= 8'h0;
 			digit <= 4'h0;
 		end else if(state == MAC_OUTPUT_WRITE) begin
