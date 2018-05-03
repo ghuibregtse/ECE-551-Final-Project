@@ -153,6 +153,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			end
 			//Converts digit to ASCI for UART_TX and also sets LED to display the calculated digit
 			TRANSMIT : begin
+				clear_write_prog = 1;
 				ram_clr = 1;
 				if(tx_rdy)
 					nxt_state = LOAD;
