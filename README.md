@@ -1,6 +1,8 @@
 # ECE-551-Final-Project
 Final Project for ECE 551 (Simple Artificial Neural Network)
 
+Github Repository: https://github.com/ghuibregtse/ECE-551-Final-Project
+
 ECE 551 Spring 2018
 Professor:          Younghyun Kim
 
