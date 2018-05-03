@@ -22,6 +22,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	reg [7:0] rx_data, uart_data;
 	wire [7:0] out_digit;
 	wire [3:0] digit;
+	logic clr_uart,clr_write_prog;
 	// Double flop RX for meta-stability reasons
 	always_ff @(posedge clk, negedge rst_n)
 		if (!rst_n) begin
@@ -42,6 +43,8 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	always_ff@(posedge clk, negedge rst_n) begin
 		if(!rst_n)
 			uart_data <= 8'hFF;
+		else if (clr_uart)
+			uart_data <= 8'hFF;
 		else if (rx_rdy)
 			uart_data <= rx_data;
 		else
@@ -52,7 +55,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	Ram Input Unit Instantiation and logic
 	******************************************************/
 	wire [9:0] ram_addr;
-	logic we,clr_write_prog; 
+	logic we; 
 	reg [9:0] ram_prog;
 	reg [2:0] write_prog;
 	wire write_done, ram_write_done;
@@ -120,6 +123,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		nxt_state = LOAD;
 		start = 0;
 		clr_write_prog = 0;
+		clr_uart = 0;
 		case (state)
 			LOAD : begin
 				if (rx_rdy) begin
@@ -153,8 +157,9 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			end
 			//Converts digit to ASCI for UART_TX and also sets LED to display the calculated digit
 			TRANSMIT : begin
-				clear_write_prog = 1;
+				clr_write_prog = 1;
 				ram_clr = 1;
+				clr_uart = 1;
 				if(tx_rdy)
 					nxt_state = LOAD;
 				else
