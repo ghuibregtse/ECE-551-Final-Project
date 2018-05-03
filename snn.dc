@@ -21,7 +21,7 @@ set current_design snn.sv
 ##############################
 # Constrain and assign clock #E 
 ##############################
-create_clock -name "clk" -period 2 -waveform {0 1} {clk}
+create_clock -name "clk" -period 2.5 -waveform {0 1.25} {clk}
 set_dont_touch_network [find port clk]
 
 
@@ -30,8 +30,7 @@ set_dont_touch_network [find port clk]
 ###################################
 set prim_inputs [remove_from_collection [all_inputs] [find port clk]]
 set_input_delay -clock clk 0.5 $prim_inputs
-set_driving_cell -lib_cell AO33D0BWP -from_pin A1 -library tcbn40lpbwptc $prim_inputs
-set_drive 0.1 rst_n
+set_driving_cell -lib_cell ND2D2BWP -from_pin A1 -library tcbn40lpbwptc $prim_inputs
 
 ###################################
 # Constrain output timing & loads #
@@ -54,7 +53,7 @@ ungroup -all -flatten
 
 set_clock_uncertainty 0.15 clk
 set_fix_hold clk
-compile -map_effort ultra
+compile_ultra
 
 
 ###########################################
