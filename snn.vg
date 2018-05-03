@@ -1,0 +1,485 @@
+/////////////////////////////////////////////////////////////
+// Created by: Synopsys DC Expert(TM) in wire load mode
+// Version   : M-2016.12
+// Date      : Wed May  2 21:10:17 2018
+/////////////////////////////////////////////////////////////
+
+
+module snn ( clk, sys_rst_n, led, uart_tx, uart_rx, tx_rdy );
+  output [7:0] led;
+  input clk, sys_rst_n, uart_rx;
+  output uart_tx, tx_rdy;
+  wire   N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, rst_n,
+         N14, uart_rx_ff, uart_rx_synch, rx_rdy, done, N15, clr_uart, N16, N17,
+         N18, N19, N20, N21, N22, N23, N24, N25, N26, N27, we, q, start,
+         write_done, N28, N29, N30, clr_write_prog, inc_write, N31, N32, N33,
+         N34, N35, N36, N37, N38, N39, N40, N41, ram_write_done, N42, N43, N44,
+         ram_clr, inc_ram, N45, N46, N47, N48, N49, N50, N51, N52, N53, N54,
+         N55, N56, N57, N58, N59, N60, N61, N62, N63, N64, N65, N66, N67, N68,
+         N69, N70, N71, N72, N73, N74, N75, N76, N77, N78, N79, N80, N81, N82,
+         N83, N84, N85, N86, N87, N88, N89, N90, N91, N92, N93, N94, N95, N96,
+         N97, N98, N99, N100, N101, N102, N103, N104, N105, N106, N107, N108,
+         N109, N110, N111, N112, N113, N114, N115, N116, N117, N118, N119,
+         N120, N121, N122, N123, N124, N125, N126, N127, N128, N129, N130,
+         N131, N132, N133, N134, N135, N136, N137, N138, N139, N140, N141,
+         N142, N143, N144, N145, N146, N147, N148, N149, N150, N151, N152,
+         N153, N154, N155, N156, N157, N158, N159, N160, N161, N162, N163,
+         N164, N165, N166, N167, N168, N169, N170, N171, N172, N173, N174,
+         N175, N176, N177, N178, N179, N180, N181, N182, N183, N184, N185,
+         N186, N187, N188, N189, N190, N191, N192, N193, N194, N195, N196,
+         N197, N198, N199, N200, N201, N202, N203, N204, N205, N206, N207,
+         N208, N209, N210, N211, N212, N213, N214, N215;
+  wire   [7:0] rx_data;
+  wire   [7:0] uart_data;
+  wire   [9:0] ram_addr;
+  wire   [9:0] addr_input_unit;
+  wire   [3:0] digit;
+  wire   [31:0] state;
+  wire   [9:0] ram_prog;
+  wire   [2:0] write_prog;
+  wire   [1:0] nxt_state;
+
+  rst_synch i_rst_synch ( .sys_rst_n(sys_rst_n), .rst_n(rst_n), .clk(clk) );
+  \**SEQGEN**  uart_rx_synch_reg ( .clear(1'b0), .preset(N14), .next_state(
+        uart_rx_ff), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        uart_rx_synch), .synch_clear(1'b0), .synch_preset(1'b0), 
+        .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  uart_rx_ff_reg ( .clear(1'b0), .preset(N14), .next_state(
+        uart_rx), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        uart_rx_ff), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(
+        1'b0), .synch_enable(1'b1) );
+  uart_rx rx ( .clk(clk), .rst_n(rst_n), .rx(uart_rx_synch), .rx_rdy(rx_rdy), 
+        .rx_data(rx_data) );
+  uart_tx tx ( .clk(clk), .rst_n(rst_n), .tx(uart_tx), .tx_start(done), 
+        .tx_data({1'b0, 1'b0, 1'b0, 1'b0, digit}), .tx_rdy(tx_rdy) );
+  \**SEQGEN**  \uart_data_reg[7]  ( .clear(1'b0), .preset(N15), .next_state(
+        N25), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[7]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[6]  ( .clear(1'b0), .preset(N15), .next_state(
+        N24), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[6]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[5]  ( .clear(1'b0), .preset(N15), .next_state(
+        N23), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[5]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[4]  ( .clear(1'b0), .preset(N15), .next_state(
+        N22), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[4]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[3]  ( .clear(1'b0), .preset(N15), .next_state(
+        N21), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[3]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[2]  ( .clear(1'b0), .preset(N15), .next_state(
+        N20), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[2]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[1]  ( .clear(1'b0), .preset(N15), .next_state(
+        N19), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[1]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  \**SEQGEN**  \uart_data_reg[0]  ( .clear(1'b0), .preset(N15), .next_state(
+        N18), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(uart_data[0]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(
+        1'b1) );
+  ram_input_unit ram_input_unit ( .data(uart_data[0]), .addr(ram_addr), .we(we), .clk(clk), .q(q) );
+  snn_core snn_core ( .clk(clk), .rst_n(rst_n), .start(start), .q_input(q), 
+        .addr_input_unit(addr_input_unit), .digit(digit), .done(done) );
+  \**SEQGEN**  \write_prog_reg[2]  ( .clear(N28), .preset(1'b0), .next_state(
+        N39), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        write_prog[2]), .synch_clear(1'b0), .synch_preset(1'b0), 
+        .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  \write_prog_reg[1]  ( .clear(N28), .preset(1'b0), .next_state(
+        N38), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        write_prog[1]), .synch_clear(1'b0), .synch_preset(1'b0), 
+        .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  \write_prog_reg[0]  ( .clear(N28), .preset(1'b0), .next_state(
+        N37), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        write_prog[0]), .synch_clear(1'b0), .synch_preset(1'b0), 
+        .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[9]  ( .clear(N42), .preset(1'b0), .next_state(N67), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[9]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[8]  ( .clear(N42), .preset(1'b0), .next_state(N66), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[8]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[7]  ( .clear(N42), .preset(1'b0), .next_state(N65), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[7]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[6]  ( .clear(N42), .preset(1'b0), .next_state(N64), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[6]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[5]  ( .clear(N42), .preset(1'b0), .next_state(N63), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[5]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[4]  ( .clear(N42), .preset(1'b0), .next_state(N62), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[4]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[3]  ( .clear(N42), .preset(1'b0), .next_state(N61), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[3]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[2]  ( .clear(N42), .preset(1'b0), .next_state(N60), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[2]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[1]  ( .clear(N42), .preset(1'b0), .next_state(N59), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[1]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \ram_prog_reg[0]  ( .clear(N42), .preset(1'b0), .next_state(N58), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(ram_prog[0]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  GTECH_AND2 C183 ( .A(N70), .B(N71), .Z(N100) );
+  GTECH_AND2 C184 ( .A(N72), .B(N73), .Z(N101) );
+  GTECH_AND2 C185 ( .A(N74), .B(N75), .Z(N102) );
+  GTECH_AND2 C186 ( .A(N76), .B(N77), .Z(N103) );
+  GTECH_AND2 C187 ( .A(N78), .B(N79), .Z(N104) );
+  GTECH_AND2 C188 ( .A(N80), .B(N81), .Z(N105) );
+  GTECH_AND2 C189 ( .A(N82), .B(N83), .Z(N106) );
+  GTECH_AND2 C190 ( .A(N84), .B(N85), .Z(N107) );
+  GTECH_AND2 C191 ( .A(N86), .B(N87), .Z(N108) );
+  GTECH_AND2 C192 ( .A(N88), .B(N89), .Z(N109) );
+  GTECH_AND2 C193 ( .A(N90), .B(N91), .Z(N110) );
+  GTECH_AND2 C194 ( .A(N92), .B(N93), .Z(N111) );
+  GTECH_AND2 C195 ( .A(N94), .B(N95), .Z(N112) );
+  GTECH_AND2 C196 ( .A(N96), .B(N97), .Z(N113) );
+  GTECH_AND2 C197 ( .A(N98), .B(N99), .Z(N114) );
+  GTECH_AND2 C198 ( .A(N100), .B(N101), .Z(N115) );
+  GTECH_AND2 C199 ( .A(N102), .B(N103), .Z(N116) );
+  GTECH_AND2 C200 ( .A(N104), .B(N105), .Z(N117) );
+  GTECH_AND2 C201 ( .A(N106), .B(N107), .Z(N118) );
+  GTECH_AND2 C202 ( .A(N108), .B(N109), .Z(N119) );
+  GTECH_AND2 C203 ( .A(N110), .B(N111), .Z(N120) );
+  GTECH_AND2 C204 ( .A(N112), .B(N113), .Z(N121) );
+  GTECH_AND2 C205 ( .A(N115), .B(N116), .Z(N122) );
+  GTECH_AND2 C206 ( .A(N117), .B(N118), .Z(N123) );
+  GTECH_AND2 C207 ( .A(N119), .B(N120), .Z(N124) );
+  GTECH_AND2 C208 ( .A(N121), .B(N114), .Z(N125) );
+  GTECH_AND2 C209 ( .A(N122), .B(N123), .Z(N126) );
+  GTECH_AND2 C210 ( .A(N124), .B(N125), .Z(N127) );
+  GTECH_AND2 C211 ( .A(N126), .B(N127), .Z(N128) );
+  GTECH_AND2 C217 ( .A(N165), .B(N130), .Z(N131) );
+  GTECH_OR2 C219 ( .A(state[1]), .B(N130), .Z(N132) );
+  GTECH_OR2 C222 ( .A(N165), .B(state[0]), .Z(N134) );
+  GTECH_AND2 C224 ( .A(state[1]), .B(state[0]), .Z(N136) );
+  \**SEQGEN**  \state_reg[31]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[31]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[30]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[30]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[29]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[29]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[28]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[28]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[27]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[27]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[26]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[26]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[25]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[25]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[24]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[24]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[23]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[23]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[22]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[22]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[21]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[21]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[20]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[20]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[19]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[19]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[18]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[18]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[17]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[17]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[16]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[16]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[15]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[15]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[14]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[14]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[13]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[13]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[12]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[12]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[11]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[11]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[10]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[10]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[9]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[9]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[8]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[8]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[7]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[7]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[6]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[6]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[5]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[5]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[4]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[4]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[3]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[3]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[2]  ( .clear(N153), .preset(1'b0), .next_state(1'b0), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(state[2]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[1]  ( .clear(N153), .preset(1'b0), .next_state(
+        nxt_state[1]), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        state[1]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  \state_reg[0]  ( .clear(N153), .preset(1'b0), .next_state(
+        nxt_state[0]), .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(
+        state[0]), .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[7]  ( .clear(N154), .preset(1'b0), .next_state(N164), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[7]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[6]  ( .clear(N154), .preset(1'b0), .next_state(N163), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[6]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[5]  ( .clear(N154), .preset(1'b0), .next_state(N162), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[5]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[4]  ( .clear(N154), .preset(1'b0), .next_state(N161), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[4]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[3]  ( .clear(N154), .preset(1'b0), .next_state(N160), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[3]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[2]  ( .clear(N154), .preset(1'b0), .next_state(N159), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[2]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[1]  ( .clear(N154), .preset(1'b0), .next_state(N158), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[1]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  \**SEQGEN**  \led_reg[0]  ( .clear(N154), .preset(1'b0), .next_state(N157), 
+        .clocked_on(clk), .data_in(1'b0), .enable(1'b0), .Q(led[0]), 
+        .synch_clear(1'b0), .synch_preset(1'b0), .synch_toggle(1'b0), 
+        .synch_enable(1'b1) );
+  GTECH_NOT I_0 ( .A(state[1]), .Z(N165) );
+  GTECH_OR2 C393 ( .A(state[30]), .B(state[31]), .Z(N166) );
+  GTECH_OR2 C394 ( .A(state[29]), .B(N166), .Z(N167) );
+  GTECH_OR2 C395 ( .A(state[28]), .B(N167), .Z(N168) );
+  GTECH_OR2 C396 ( .A(state[27]), .B(N168), .Z(N169) );
+  GTECH_OR2 C397 ( .A(state[26]), .B(N169), .Z(N170) );
+  GTECH_OR2 C398 ( .A(state[25]), .B(N170), .Z(N171) );
+  GTECH_OR2 C399 ( .A(state[24]), .B(N171), .Z(N172) );
+  GTECH_OR2 C400 ( .A(state[23]), .B(N172), .Z(N173) );
+  GTECH_OR2 C401 ( .A(state[22]), .B(N173), .Z(N174) );
+  GTECH_OR2 C402 ( .A(state[21]), .B(N174), .Z(N175) );
+  GTECH_OR2 C403 ( .A(state[20]), .B(N175), .Z(N176) );
+  GTECH_OR2 C404 ( .A(state[19]), .B(N176), .Z(N177) );
+  GTECH_OR2 C405 ( .A(state[18]), .B(N177), .Z(N178) );
+  GTECH_OR2 C406 ( .A(state[17]), .B(N178), .Z(N179) );
+  GTECH_OR2 C407 ( .A(state[16]), .B(N179), .Z(N180) );
+  GTECH_OR2 C408 ( .A(state[15]), .B(N180), .Z(N181) );
+  GTECH_OR2 C409 ( .A(state[14]), .B(N181), .Z(N182) );
+  GTECH_OR2 C410 ( .A(state[13]), .B(N182), .Z(N183) );
+  GTECH_OR2 C411 ( .A(state[12]), .B(N183), .Z(N184) );
+  GTECH_OR2 C412 ( .A(state[11]), .B(N184), .Z(N185) );
+  GTECH_OR2 C413 ( .A(state[10]), .B(N185), .Z(N186) );
+  GTECH_OR2 C414 ( .A(state[9]), .B(N186), .Z(N187) );
+  GTECH_OR2 C415 ( .A(state[8]), .B(N187), .Z(N188) );
+  GTECH_OR2 C416 ( .A(state[7]), .B(N188), .Z(N189) );
+  GTECH_OR2 C417 ( .A(state[6]), .B(N189), .Z(N190) );
+  GTECH_OR2 C418 ( .A(state[5]), .B(N190), .Z(N191) );
+  GTECH_OR2 C419 ( .A(state[4]), .B(N191), .Z(N192) );
+  GTECH_OR2 C420 ( .A(state[3]), .B(N192), .Z(N193) );
+  GTECH_OR2 C421 ( .A(state[2]), .B(N193), .Z(N194) );
+  GTECH_OR2 C422 ( .A(N165), .B(N194), .Z(N195) );
+  GTECH_OR2 C423 ( .A(state[0]), .B(N195), .Z(N196) );
+  GTECH_NOT I_1 ( .A(N196), .Z(N197) );
+  GTECH_AND2 C425 ( .A(write_prog[1]), .B(write_prog[2]), .Z(N198) );
+  GTECH_AND2 C426 ( .A(write_prog[0]), .B(N198), .Z(N199) );
+  GTECH_NOT I_2 ( .A(ram_prog[9]), .Z(N200) );
+  GTECH_NOT I_3 ( .A(ram_prog[8]), .Z(N201) );
+  GTECH_NOT I_4 ( .A(ram_prog[3]), .Z(N202) );
+  GTECH_NOT I_5 ( .A(ram_prog[2]), .Z(N203) );
+  GTECH_NOT I_6 ( .A(ram_prog[1]), .Z(N204) );
+  GTECH_NOT I_7 ( .A(ram_prog[0]), .Z(N205) );
+  GTECH_OR2 C433 ( .A(N201), .B(N200), .Z(N206) );
+  GTECH_OR2 C434 ( .A(ram_prog[7]), .B(N206), .Z(N207) );
+  GTECH_OR2 C435 ( .A(ram_prog[6]), .B(N207), .Z(N208) );
+  GTECH_OR2 C436 ( .A(ram_prog[5]), .B(N208), .Z(N209) );
+  GTECH_OR2 C437 ( .A(ram_prog[4]), .B(N209), .Z(N210) );
+  GTECH_OR2 C438 ( .A(N202), .B(N210), .Z(N211) );
+  GTECH_OR2 C439 ( .A(N203), .B(N211), .Z(N212) );
+  GTECH_OR2 C440 ( .A(N204), .B(N212), .Z(N213) );
+  GTECH_OR2 C441 ( .A(N205), .B(N213), .Z(N214) );
+  GTECH_NOT I_8 ( .A(N214), .Z(N215) );
+  ADD_UNS_OP add_107 ( .A(ram_prog), .B(1'b1), .Z({N57, N56, N55, N54, N53, 
+        N52, N51, N50, N49, N48}) );
+  ADD_UNS_OP add_91 ( .A(write_prog), .B(1'b1), .Z({N36, N35, N34}) );
+  SELECT_OP C443 ( .DATA1({1'b1, 1'b1, 1'b1, 1'b1, 1'b1, 1'b1, 1'b1, 1'b1}), 
+        .DATA2(rx_data), .DATA3({1'b1, uart_data[7:1]}), .CONTROL1(N0), 
+        .CONTROL2(N27), .CONTROL3(N17), .Z({N25, N24, N23, N22, N21, N20, N19, 
+        N18}) );
+  GTECH_BUF B_0 ( .A(clr_uart), .Z(N0) );
+  SELECT_OP C444 ( .DATA1(addr_input_unit), .DATA2(ram_prog), .CONTROL1(N1), 
+        .CONTROL2(N2), .Z(ram_addr) );
+  GTECH_BUF B_1 ( .A(N197), .Z(N1) );
+  GTECH_BUF B_2 ( .A(N196), .Z(N2) );
+  SELECT_OP C445 ( .DATA1({1'b0, 1'b0, 1'b0}), .DATA2({N36, N35, N34}), 
+        .DATA3(write_prog), .CONTROL1(N3), .CONTROL2(N41), .CONTROL3(N32), .Z(
+        {N39, N38, N37}) );
+  GTECH_BUF B_3 ( .A(clr_write_prog), .Z(N3) );
+  SELECT_OP C446 ( .DATA1({1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 
+        1'b0, 1'b0}), .DATA2({N57, N56, N55, N54, N53, N52, N51, N50, N49, N48}), .DATA3(ram_prog), .CONTROL1(N4), .CONTROL2(N69), .CONTROL3(N46), .Z({N67, 
+        N66, N65, N64, N63, N62, N61, N60, N59, N58}) );
+  GTECH_BUF B_4 ( .A(ram_clr), .Z(N4) );
+  SELECT_OP C447 ( .DATA1(1'b1), .DATA2(1'b0), .DATA3(1'b0), .CONTROL1(N5), 
+        .CONTROL2(N139), .CONTROL3(N6), .Z(N140) );
+  GTECH_BUF B_5 ( .A(ram_write_done), .Z(N5) );
+  GTECH_BUF B_6 ( .A(1'b0), .Z(N6) );
+  SELECT_OP C448 ( .DATA1({1'b1, 1'b0}), .DATA2({1'b0, 1'b0}), .DATA3({1'b0, 
+        1'b1}), .CONTROL1(N5), .CONTROL2(N152), .CONTROL3(N138), .Z({N142, 
+        N141}) );
+  SELECT_OP C449 ( .DATA1(1'b0), .DATA2(1'b1), .DATA3(1'b0), .CONTROL1(N5), 
+        .CONTROL2(N152), .CONTROL3(N138), .Z(N143) );
+  SELECT_OP C450 ( .DATA1({1'b0, rx_rdy}), .DATA2({N142, N141}), .DATA3({1'b1, 
+        N144}), .DATA4({N145, N145}), .CONTROL1(N7), .CONTROL2(N8), .CONTROL3(
+        N9), .CONTROL4(N10), .Z({N147, N146}) );
+  GTECH_BUF B_7 ( .A(N131), .Z(N7) );
+  GTECH_BUF B_8 ( .A(N133), .Z(N8) );
+  GTECH_BUF B_9 ( .A(N135), .Z(N9) );
+  GTECH_BUF B_10 ( .A(N136), .Z(N10) );
+  SELECT_OP C451 ( .DATA1(1'b0), .DATA2(1'b1), .DATA3(1'b0), .DATA4(1'b0), 
+        .CONTROL1(N7), .CONTROL2(N8), .CONTROL3(N9), .CONTROL4(N10), .Z(N148)
+         );
+  SELECT_OP C452 ( .DATA1(1'b0), .DATA2(N143), .DATA3(1'b0), .DATA4(1'b1), 
+        .CONTROL1(N7), .CONTROL2(N8), .CONTROL3(N9), .CONTROL4(N10), .Z(N149)
+         );
+  SELECT_OP C453 ( .DATA1(1'b0), .DATA2(N140), .DATA3(1'b0), .DATA4(1'b0), 
+        .CONTROL1(N7), .CONTROL2(N8), .CONTROL3(N9), .CONTROL4(N10), .Z(N150)
+         );
+  SELECT_OP C454 ( .DATA1(1'b0), .DATA2(1'b0), .DATA3(1'b0), .DATA4(1'b1), 
+        .CONTROL1(N7), .CONTROL2(N8), .CONTROL3(N9), .CONTROL4(N10), .Z(N151)
+         );
+  SELECT_OP C455 ( .DATA1(N151), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(ram_clr) );
+  GTECH_BUF B_11 ( .A(N128), .Z(N11) );
+  SELECT_OP C456 ( .DATA1(N151), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(clr_uart) );
+  SELECT_OP C457 ( .DATA1({N147, N146}), .DATA2({1'b0, 1'b0}), .CONTROL1(N11), 
+        .CONTROL2(N129), .Z(nxt_state) );
+  SELECT_OP C458 ( .DATA1(N148), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(we) );
+  SELECT_OP C459 ( .DATA1(N148), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(inc_ram) );
+  SELECT_OP C460 ( .DATA1(N148), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(inc_write) );
+  SELECT_OP C461 ( .DATA1(N149), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(clr_write_prog) );
+  SELECT_OP C462 ( .DATA1(N150), .DATA2(1'b0), .CONTROL1(N11), .CONTROL2(N129), 
+        .Z(start) );
+  SELECT_OP C463 ( .DATA1({1'b0, 1'b0, 1'b0, 1'b0, digit}), .DATA2(led), 
+        .CONTROL1(N12), .CONTROL2(N13), .Z({N164, N163, N162, N161, N160, N159, 
+        N158, N157}) );
+  GTECH_BUF B_12 ( .A(N156), .Z(N12) );
+  GTECH_BUF B_13 ( .A(N155), .Z(N13) );
+  GTECH_NOT I_9 ( .A(rst_n), .Z(N14) );
+  GTECH_NOT I_10 ( .A(rst_n), .Z(N15) );
+  GTECH_OR2 C470 ( .A(rx_rdy), .B(clr_uart), .Z(N16) );
+  GTECH_NOT I_11 ( .A(N16), .Z(N17) );
+  GTECH_NOT I_12 ( .A(clr_uart), .Z(N26) );
+  GTECH_AND2 C473 ( .A(rx_rdy), .B(N26), .Z(N27) );
+  GTECH_BUF B_14 ( .A(N199), .Z(write_done) );
+  GTECH_NOT I_13 ( .A(rst_n), .Z(N28) );
+  GTECH_BUF B_15 ( .A(rst_n), .Z(N29) );
+  GTECH_BUF B_16 ( .A(N29), .Z(N30) );
+  GTECH_OR2 C482 ( .A(inc_write), .B(clr_write_prog), .Z(N31) );
+  GTECH_NOT I_14 ( .A(N31), .Z(N32) );
+  GTECH_AND2 C484 ( .A(N30), .B(N41), .Z(N33) );
+  GTECH_NOT I_15 ( .A(clr_write_prog), .Z(N40) );
+  GTECH_AND2 C486 ( .A(inc_write), .B(N40), .Z(N41) );
+  GTECH_AND2 C487 ( .A(N33), .B(N40) );
+  GTECH_BUF B_17 ( .A(N215), .Z(ram_write_done) );
+  GTECH_NOT I_16 ( .A(rst_n), .Z(N42) );
+  GTECH_BUF B_18 ( .A(rst_n), .Z(N43) );
+  GTECH_BUF B_19 ( .A(N43), .Z(N44) );
+  GTECH_OR2 C494 ( .A(inc_ram), .B(ram_clr), .Z(N45) );
+  GTECH_NOT I_17 ( .A(N45), .Z(N46) );
+  GTECH_AND2 C496 ( .A(N44), .B(N69), .Z(N47) );
+  GTECH_NOT I_18 ( .A(ram_clr), .Z(N68) );
+  GTECH_AND2 C498 ( .A(inc_ram), .B(N68), .Z(N69) );
+  GTECH_AND2 C499 ( .A(N47), .B(N68) );
+  GTECH_NOT I_19 ( .A(state[31]), .Z(N70) );
+  GTECH_NOT I_20 ( .A(state[30]), .Z(N71) );
+  GTECH_NOT I_21 ( .A(state[29]), .Z(N72) );
+  GTECH_NOT I_22 ( .A(state[28]), .Z(N73) );
+  GTECH_NOT I_23 ( .A(state[27]), .Z(N74) );
+  GTECH_NOT I_24 ( .A(state[26]), .Z(N75) );
+  GTECH_NOT I_25 ( .A(state[25]), .Z(N76) );
+  GTECH_NOT I_26 ( .A(state[24]), .Z(N77) );
+  GTECH_NOT I_27 ( .A(state[23]), .Z(N78) );
+  GTECH_NOT I_28 ( .A(state[22]), .Z(N79) );
+  GTECH_NOT I_29 ( .A(state[21]), .Z(N80) );
+  GTECH_NOT I_30 ( .A(state[20]), .Z(N81) );
+  GTECH_NOT I_31 ( .A(state[19]), .Z(N82) );
+  GTECH_NOT I_32 ( .A(state[18]), .Z(N83) );
+  GTECH_NOT I_33 ( .A(state[17]), .Z(N84) );
+  GTECH_NOT I_34 ( .A(state[16]), .Z(N85) );
+  GTECH_NOT I_35 ( .A(state[15]), .Z(N86) );
+  GTECH_NOT I_36 ( .A(state[14]), .Z(N87) );
+  GTECH_NOT I_37 ( .A(state[13]), .Z(N88) );
+  GTECH_NOT I_38 ( .A(state[12]), .Z(N89) );
+  GTECH_NOT I_39 ( .A(state[11]), .Z(N90) );
+  GTECH_NOT I_40 ( .A(state[10]), .Z(N91) );
+  GTECH_NOT I_41 ( .A(state[9]), .Z(N92) );
+  GTECH_NOT I_42 ( .A(state[8]), .Z(N93) );
+  GTECH_NOT I_43 ( .A(state[7]), .Z(N94) );
+  GTECH_NOT I_44 ( .A(state[6]), .Z(N95) );
+  GTECH_NOT I_45 ( .A(state[5]), .Z(N96) );
+  GTECH_NOT I_46 ( .A(state[4]), .Z(N97) );
+  GTECH_NOT I_47 ( .A(state[3]), .Z(N98) );
+  GTECH_NOT I_48 ( .A(state[2]), .Z(N99) );
+  GTECH_NOT I_49 ( .A(N128), .Z(N129) );
+  GTECH_NOT I_50 ( .A(state[0]), .Z(N130) );
+  GTECH_NOT I_51 ( .A(N132), .Z(N133) );
+  GTECH_NOT I_52 ( .A(N134), .Z(N135) );
+  GTECH_OR2 C545 ( .A(write_done), .B(ram_write_done), .Z(N137) );
+  GTECH_NOT I_53 ( .A(N137), .Z(N138) );
+  GTECH_NOT I_54 ( .A(ram_write_done), .Z(N139) );
+  GTECH_BUF B_20 ( .A(done), .Z(N144) );
+  GTECH_NOT I_55 ( .A(tx_rdy), .Z(N145) );
+  GTECH_AND2 C551 ( .A(write_done), .B(N139), .Z(N152) );
+  GTECH_NOT I_56 ( .A(rst_n), .Z(N153) );
+  GTECH_NOT I_57 ( .A(rst_n), .Z(N154) );
+  GTECH_NOT I_58 ( .A(done), .Z(N155) );
+  GTECH_BUF B_21 ( .A(done), .Z(N156) );
+endmodule
+
