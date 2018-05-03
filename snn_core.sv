@@ -156,6 +156,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		clr_hidden = 0;
 		clr_input = 0;
 		clr_output = 0;
+		clr_max_val = 0;
 		case (state)
 			IDLE : begin
 				if (start) begin
@@ -222,6 +223,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			DONE : begin
 				nxt_state = IDLE;
 				done = 1;
+				clr_max_val = 1;
 				clr_hidden = 1;
 				clr_input = 1;
 				clr_output = 1;
