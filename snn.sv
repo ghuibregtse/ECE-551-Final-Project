@@ -20,7 +20,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	// Declare wires below
 	wire rx_rdy;
 	reg [7:0] rx_data, uart_data;
-	wire [7:0] ascii_digit;
+	wire [7:0] out_digit;
 	wire [3:0] digit;
 	// Double flop RX for meta-stability reasons
 	always_ff @(posedge clk, negedge rst_n)
@@ -37,7 +37,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	// For UART_RX, use "uart_rx_synch", which is synchronized, not "uart_rx".
 	
 	uart_rx rx(clk,rst_n,uart_rx_synch,rx_rdy,rx_data);
-	uart_tx tx(clk, rst_n, uart_tx, done, ascii_digit,tx_rdy);
+	uart_tx tx(clk, rst_n, uart_tx, done, out_digit,tx_rdy);
 	
 	always_ff@(posedge clk, negedge rst_n) begin
 		if(!rst_n)
@@ -56,7 +56,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	reg [9:0] ram_prog;
 	reg [2:0] write_prog;
 	wire write_done, ram_write_done;
-	logic inc_write,inc_ram;
+	logic inc_write,inc_ram,ram_clr;
 	ram_input_unit ram_input_unit(uart_data[0], ram_addr, we, clk, q);
 	
 	/******************************************************
@@ -66,7 +66,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	logic start;                   // asserted when finished writing SNN_INPUT to RAM
 	snn_core snn_core(clk, rst_n, start, q, addr_input_unit, digit, done);
 	
-	typedef enum {IDLE,LOAD,RAM_WRITE,CALCULATE_FP,CALCULATE,TRANSMIT} State;
+	typedef enum {LOAD,RAM_WRITE,CALCULATE,TRANSMIT} State;
 	State state,nxt_state;
 	
 	/******************************************************
@@ -98,7 +98,9 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 		if (!rst_n)
 			ram_prog <= 10'h0;
 		else
-			if (inc_ram)
+			if (ram_clr)
+				ram_prog <= 10'h0;
+			else if (inc_ram)
 				ram_prog <= ram_prog + 1;
 			else
 				ram_prog <= ram_prog;
@@ -113,6 +115,7 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	always_comb begin
 		inc_write = 0;
 		inc_ram = 0;
+		ram_clr = 0;
 		we = 0;
 		nxt_state = LOAD;
 		start = 0;
@@ -150,8 +153,9 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 			end
 			//Converts digit to ASCI for UART_TX and also sets LED to display the calculated digit
 			TRANSMIT : begin
+				ram_clr = 1;
 				if(tx_rdy)
-					nxt_state = IDLE;
+					nxt_state = LOAD;
 				else
 					nxt_state = TRANSMIT;
 			end
@@ -171,13 +175,13 @@ module snn(clk, sys_rst_n, led, uart_tx, uart_rx,tx_rdy);
 	/******************************************************
 	LED
 	******************************************************/
-	assign ascii_digit = {4'h3, digit};
+	assign out_digit = {4'h0, digit};
 	always@(posedge clk, negedge rst_n) begin
 		if(!rst_n)
 			led <= 8'h00;
 		else 
 			if (done)
-				led <= ascii_digit;
+				led <= out_digit;
 			else
 				led <= led;
 	end

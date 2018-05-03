@@ -218,6 +218,9 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			DONE : begin
 				nxt_state = IDLE;
 				done = 1;
+				clr_hidden = 1;
+				clr_input = 1;
+				clr_output = 1;
 			end
 			default : nxt_state = IDLE;
 		endcase
