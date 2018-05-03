@@ -155,6 +155,7 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 		case (state)
 			IDLE : begin // Idle state logic
 				if (start) begin
+					clr_max_val = 1;
 					nxt_state = MAC_HIDDEN;
 					clr_n = 0;
 				end
@@ -218,7 +219,6 @@ module snn_core(clk, rst_n, start, q_input, addr_input_unit, digit, done);
 			DONE : begin // Done state, clear counters and wires
 				nxt_state = IDLE;
 				done = 1;
-				clr_max_val = 1;
 				clr_hidden = 1;
 				clr_input = 1;
 				clr_output = 1;
